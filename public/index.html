@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F4B48">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Uniqon">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Uniqon Home Center</title>
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=Vazirmatn:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F1EC; --panel:#FFFFFF; --ink:#4A4A4C; --teal:#1F4B48; --gold:#B3A46A; --muted:#6B6F76; --line:#D8DBDF;
+  --in:#1E7B57; --in-soft:#DDF0E7; --out:#8E2F2F; --out-soft:#F5E1E1; --focus:#2F5D9E;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Barlow,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+header{background:#fff;color:var(--ink);border-bottom:4px solid var(--gold);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:12px}.brand img{height:54px;width:auto;display:block}.brand small{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;border-inline-start:2px solid var(--gold);padding-inline-start:12px}
+header .who{font-size:14px;color:var(--muted);text-align:end;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+header button{background:#fff;border:1px solid var(--teal);color:var(--teal);border-radius:6px;padding:6px 12px;cursor:pointer}
+main{max-width:880px;margin:0 auto;padding:22px 16px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:18px}
+h1{font-size:22px;margin:0 0 6px;font-weight:600}
+h2{font-size:18px;margin:0 0 12px;font-weight:600}
+p.hint{color:var(--muted);margin:0 0 16px}
+label{display:block;font-weight:500;margin:14px 0 4px}
+input,select{width:100%;padding:11px 12px;border:1px solid #B8BCC2;border-radius:6px;background:#fff}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:6px;padding:11px 18px;cursor:pointer;font-weight:500}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid #B8BCC2}
+.btn.small{padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.55;cursor:default}
+.err{background:var(--out-soft);color:var(--out);padding:10px 12px;border-radius:6px;margin-top:14px}
+.ok{background:var(--in-soft);color:var(--in);padding:10px 12px;border-radius:6px;margin-top:14px}
+.login{max-width:420px;margin:40px auto}
+.clock{text-align:center}
+.time{font-family:"Barlow Condensed",sans-serif;font-weight:500;font-size:76px;line-height:1;font-variant-numeric:tabular-nums}
+.date{color:var(--muted);margin-top:4px}
+.badge{display:inline-block;margin:18px 0 6px;padding:5px 14px;border-radius:99px;font-weight:600;font-size:15px}
+.badge.in{background:var(--in-soft);color:var(--in)}
+.badge.out{background:#E4E6E9;color:#4b4f55}
+.punch{display:block;width:100%;max-width:420px;margin:14px auto 0;border:0;border-radius:10px;padding:22px;font-size:22px;font-weight:600;color:#fff;cursor:pointer}
+.punch.in{background:var(--in)} .punch.out{background:var(--out)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:start;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:14px}
+td.num,th.num{text-align:end;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tabs button{background:#fff;border:1px solid #B8BCC2;border-radius:6px;padding:8px 14px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:150px}
+.pill{font-size:13px;padding:2px 8px;border-radius:99px;background:#E4E6E9}
+.pill.off{background:var(--out-soft);color:var(--out)}
+.secret{font-family:ui-monospace,Consolas,monospace;font-size:20px;background:#F3F4F6;padding:2px 8px;border-radius:4px}
+.empty{color:var(--muted);padding:12px 0}
+.hidden{display:none}
+@media (max-width:520px){.time{font-size:60px}header .who span{display:none}.brand img{height:40px}.brand small{display:none}}
+.pwwrap{position:relative}.pwwrap input{padding-inline-end:70px;width:100%;box-sizing:border-box}.pwtoggle{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:#2563EB;font-size:14px;cursor:pointer;padding:6px}
+textarea{font:inherit;color:inherit;width:100%;padding:11px 12px;border:1px solid #B8BCC2;border-radius:6px;background:#fff;min-height:90px;resize:vertical}
+.sec{font-family:"Barlow Condensed",sans-serif;font-size:17px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--teal);border-bottom:2px solid var(--gold);padding-bottom:4px;margin:26px 0 4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.rep dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:6px 0}
+.rep dt{color:var(--muted)} .rep dd{margin:0}
+.rep .txt{white-space:pre-wrap;margin:4px 0 0}
+details.rep{border-bottom:1px solid var(--line);padding:10px 0}
+details.rep summary{cursor:pointer;font-weight:500}
+@media print{header .who,.tabs,.noprint{display:none!important}.card{border:0}details.rep{break-inside:avoid}}
+[dir=rtl] body,[dir=rtl] button,[dir=rtl] input,[dir=rtl] select,[dir=rtl] textarea{font-family:Vazirmatn,Barlow,system-ui,sans-serif}
+[dir=rtl] .sec{letter-spacing:0}
+[dir=rtl] input[type=email],[dir=rtl] input[type=number],[dir=rtl] input[type=date],[dir=rtl] input[type=time],[dir=rtl] #id{direction:ltr;text-align:right}
+.langbtn{font-weight:600}
+/* ---------- Phones ---------- */
+html{-webkit-text-size-adjust:100%}
+button,.btn,select,input,textarea{touch-action:manipulation}
+@media (max-width:640px){
+  header{padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));position:sticky;top:0;z-index:20}
+  .brand img{height:36px}
+  header .who{gap:6px}
+  header button{padding:8px 10px}
+  main{padding:12px 10px calc(90px + env(safe-area-inset-bottom))}
+  .card{padding:16px 14px;border-radius:12px;margin-bottom:12px}
+  h1{font-size:20px}
+  /* 16px+ inputs stop iOS from zooming in; taller touch targets */
+  input,select,textarea{font-size:16px;min-height:46px}
+  textarea{min-height:110px}
+  .btn{min-height:46px}
+  .btn.small{min-height:40px;padding:8px 12px}
+  .tabs{position:sticky;top:60px;z-index:15;background:var(--bg);margin:-12px -10px 12px;padding:10px;overflow-x:auto;flex-wrap:nowrap}
+  .tabs button{flex:1 0 auto;padding:10px 12px;white-space:nowrap}
+  .row{gap:8px}
+  .row>div{flex:1 1 100%!important;min-width:0}
+  .row .btn{width:100%}
+  .row>.locbtns{display:flex;gap:8px;white-space:normal!important}
+  .locbtns .btn{flex:1;width:auto}
+  html,body{overflow-x:hidden}
+  .login{margin:16px auto}
+  /* Submit button stays reachable at the bottom of the screen */
+  #rf>.btn{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));box-shadow:0 6px 18px rgba(0,0,0,.18);z-index:10}
+  .rep dl{grid-template-columns:1fr}
+  .rep dt{margin-top:6px;font-size:13px}
+  details.rep summary{padding:6px 0;line-height:1.35}
+  /* Employee table becomes stacked cards */
+  #list table,#list thead,#list tbody,#list tr,#list td{display:block;width:100%}
+  #list thead{display:none}
+  #list tr{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#fff}
+  #list td{border:0;padding:4px 0}
+  #list td:first-child{font-weight:600;color:var(--muted)}
+  #list td input{width:100%}
+  #list td .btn{margin:4px 4px 0 0}
+  .secret{font-size:18px;word-break:break-all}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="/logo.png" alt="Uniqon Home Center"><small>Daily Reports</small></div>
+  <div class="who"><span id="who" class="hidden"><span id="whoName"></span></span><button id="langBtn" class="langbtn" type="button">فارسی</button><button id="logoutBtn" class="hidden" type="button">Log out</button></div>
+</header>
+<main id="app"></main>
+
+<script>
+const TZ = 'America/Los_Angeles';
+const $ = (s, r = document) => r.querySelector(s);
+const app = $('#app');
+// ---------- Language (English / Farsi) ----------
+const FA = {
+  'Daily Reports': 'گزارش‌های روزانه', 'Log out': 'خروج', 'Show': 'نمایش', 'Hide': 'پنهان',
+  'Sign in': 'ورود', 'Use your ID number or your email.': 'از شماره شناسه یا ایمیل خود استفاده کنید.',
+  'ID or email': 'شناسه یا ایمیل', 'Password': 'رمز عبور',
+  'Create your new password': 'رمز عبور جدید خود را بسازید',
+  'Your current password is temporary. Choose a new one with at least 8 characters.': 'رمز عبور فعلی شما موقت است. یک رمز جدید با حداقل ۸ کاراکتر انتخاب کنید.',
+  'Temporary password': 'رمز عبور موقت', 'New password': 'رمز عبور جدید', 'Repeat new password': 'تکرار رمز عبور جدید',
+  'Save password': 'ذخیره رمز عبور', 'New passwords do not match': 'رمزهای عبور جدید مطابقت ندارند',
+  'Daily Report': 'گزارش روزانه',
+  'Submit to store management at the end of each business day. You can come back and edit it the same day.': 'در پایان هر روز کاری به مدیریت فروشگاه ارسال کنید. می‌توانید در همان روز برگردید و آن را ویرایش کنید.',
+  'Date': 'تاریخ', 'Employee': 'کارمند', 'Opening': 'ساعت باز شدن', 'Closing': 'ساعت بسته شدن', 'Job Title': 'سمت شغلی',
+  'Location (store / project)': 'محل کار (فروشگاه / پروژه)', '+ Add new': '+ افزودن جدید', 'Remove': 'حذف',
+  'Location name (e.g. Main Store, Smith Kitchen Remodel)': 'نام محل (مثلاً فروشگاه اصلی، بازسازی آشپزخانه اسمیت)',
+  'Type': 'نوع', 'Show Run': 'نمایشگاه', 'Store': 'نمایشگاه', 'Project': 'پروژه', 'Office': 'دفتر', 'Other': 'سایر',
+  'Address': 'آدرس', 'City': 'شهر', 'Save location': 'ذخیره محل', 'Cancel': 'لغو',
+  'You only add it once — it stays saved in your list for future reports.': 'فقط یک بار اضافه می‌کنید — برای گزارش‌های بعدی در فهرست شما ذخیره می‌ماند.',
+  '1. Customer & Sales Activity': '۱. فعالیت مشتریان و فروش', 'Walk-in Customers': 'مشتریان حضوری',
+  'Phone Calls / Inquiries': 'تماس‌های تلفنی / استعلام‌ها', 'Quotations Issued': 'پیش‌فاکتورهای صادرشده', 'Orders Confirmed': 'سفارش‌های تأییدشده',
+  '2. Financial Summary': '۲. خلاصه مالی', 'Total Sales ($)': 'مجموع فروش ($)', 'Payments Received ($)': 'پرداخت‌های دریافتی ($)',
+  'Daily Expenses ($)': 'هزینه‌های روزانه ($)', 'Payment Methods': 'روش پرداخت', 'Select…': 'انتخاب کنید…', 'Cash': 'نقد', 'Card': 'کارت',
+  '3. Daily Work & Operations': '۳. کارها و عملیات روزانه',
+  'Completed Work / Deliveries / Customer Meetings': 'کارهای انجام‌شده / تحویل‌ها / جلسات با مشتری',
+  'Pending Orders & Customer Follow-ups': 'سفارش‌های در انتظار و پیگیری مشتریان',
+  'Issues / Shortages / Management Attention': 'مشکلات / کمبودها / موارد نیازمند توجه مدیریت',
+  '4. Report Approval': '۴. تأیید گزارش', 'Prepared by': 'تهیه‌کننده', 'Signature (type your full name)': 'امضا (نام کامل خود را بنویسید)',
+  'Submit report': 'ارسال گزارش', 'Select where you are working…': 'محل کار خود را انتخاب کنید…',
+  'No saved locations — add one': 'هیچ محلی ذخیره نشده — یکی اضافه کنید',
+  'My Report': 'گزارش من', 'All Reports': 'همه گزارش‌ها', 'Employees': 'کارمندان',
+  'From': 'از', 'To': 'تا', 'View': 'مشاهده', 'Download Excel': 'دانلود اکسل', 'Print': 'چاپ',
+  'Daily store reports': 'گزارش‌های روزانه فروشگاه', 'Location': 'محل', 'Opening / Closing': 'باز شدن / بسته شدن',
+  'Total Sales': 'مجموع فروش', 'Payments Received': 'پرداخت‌های دریافتی', 'Daily Expenses': 'هزینه‌های روزانه',
+  'Signature': 'امضا', 'Last saved': 'آخرین ذخیره', 'No reports in this date range.': 'در این بازه تاریخ گزارشی وجود ندارد.',
+  'No location': 'بدون محل', 'Sales': 'فروش',
+  'Add employee': 'افزودن کارمند',
+  'The app assigns an ID number and a temporary password. Give them to the employee in person.': 'برنامه یک شماره شناسه و یک رمز عبور موقت اختصاص می‌دهد. آن‌ها را حضوری به کارمند بدهید.',
+  'Full name': 'نام کامل', 'Email': 'ایمیل', 'Job title': 'سمت شغلی', 'Create': 'ایجاد',
+  'Edit a job title directly in the table — it saves automatically.': 'سمت شغلی را مستقیماً در جدول ویرایش کنید — به‌طور خودکار ذخیره می‌شود.',
+  'ID': 'شناسه', 'Name': 'نام', 'Status': 'وضعیت', 'Admin': 'مدیر', 'Active': 'فعال', 'Inactive': 'غیرفعال',
+  'Deactivate': 'غیرفعال کردن', 'Activate': 'فعال کردن',
+  'e.g. Superintendent, Sales': 'مثلاً سرپرست، فروش', 'Add title': 'افزودن سمت',
+  // Server messages
+  'Enter your ID or email and password': 'شناسه یا ایمیل و رمز عبور را وارد کنید',
+  'You must change your password first': 'ابتدا باید رمز عبور خود را تغییر دهید',
+  'Too many attempts. Wait 15 minutes.': 'تلاش‌های بیش از حد. ۱۵ دقیقه صبر کنید.',
+  'Invalid email address': 'آدرس ایمیل نامعتبر است', 'Enter the name': 'نام را وارد کنید',
+  'That email is already registered': 'این ایمیل قبلاً ثبت شده است',
+  'Incorrect ID, email or password': 'شناسه، ایمیل یا رمز عبور نادرست است',
+  'Current password is incorrect': 'رمز عبور فعلی نادرست است',
+  'New password must be different from the current one': 'رمز عبور جدید باید با رمز فعلی متفاوت باشد',
+  'New password must be at least 8 characters': 'رمز عبور جدید باید حداقل ۸ کاراکتر باشد',
+  'Select the location where you are working': 'محل کار خود را انتخاب کنید',
+  'Enter the location name': 'نام محل را وارد کنید', 'Invalid date': 'تاریخ نامعتبر', 'Invalid session': 'نشست نامعتبر',
+  // Messages with values ({x} is replaced)
+  'Report already submitted (last saved {t}). You can edit and resubmit.': 'گزارش قبلاً ارسال شده است (آخرین ذخیره: {t}). می‌توانید ویرایش و دوباره ارسال کنید.',
+  'Report submitted at {t}. Thank you!': 'گزارش در ساعت {t} ارسال شد. متشکریم!',
+  'Remove this location from your list? Past reports keep it.': 'این محل از فهرست شما حذف شود؟ گزارش‌های قبلی آن را نگه می‌دارند.',
+  '{n} report(s) · Sales {s} · Payments {p} · Expenses {e} · Walk-ins {w} · Quotes {q} · Orders {o}': '{n} گزارش · فروش {s} · پرداخت‌ها {p} · هزینه‌ها {e} · مشتریان حضوری {w} · پیش‌فاکتورها {q} · سفارش‌ها {o}',
+  'A new temporary password will be generated for this employee. Continue?': 'یک رمز عبور موقت جدید برای این کارمند ساخته می‌شود. ادامه می‌دهید؟',
+  'New temporary password for {name} (ID {id}):': 'رمز عبور موقت جدید برای {name} (شناسه {id}):',
+  'Write it down now, it will not be shown again.': 'همین حالا یادداشت کنید، دوباره نمایش داده نمی‌شود.',
+  'Employee created: {name}': 'کارمند ایجاد شد: {name}', 'Temporary password:': 'رمز عبور موقت:',
+  'Forgot password?': 'رمز عبور را فراموش کرده‌اید؟', 'Reset your password': 'بازنشانی رمز عبور',
+  'Enter the email of your account. We will send you a link to create a new password.': 'ایمیل حساب خود را وارد کنید. یک لینک برای ساختن رمز عبور جدید برایتان می‌فرستیم.',
+  'Send reset link': 'ارسال لینک بازنشانی', 'Back to sign in': 'بازگشت به ورود',
+  'If that email has an account, a reset link is on its way. Check your inbox (and spam folder).': 'اگر این ایمیل حسابی داشته باشد، لینک بازنشانی ارسال شد. صندوق ورودی (و پوشه اسپم) را بررسی کنید.',
+  'Create a new password': 'ساختن رمز عبور جدید', 'Choose a new password with at least 8 characters.': 'یک رمز عبور جدید با حداقل ۸ کاراکتر انتخاب کنید.',
+  'Password updated. You can sign in now.': 'رمز عبور به‌روز شد. اکنون می‌توانید وارد شوید.',
+  'This reset link is invalid or has expired': 'این لینک بازنشانی نامعتبر است یا منقضی شده است', 'Choose a different password': 'رمز عبور دیگری انتخاب کنید',
+  'Send reset email': 'ارسال ایمیل بازنشانی', 'Download PDF': 'دانلود PDF', 'PDF': 'PDF',
+  'Send a password reset email to this employee?': 'ایمیل بازنشانی رمز عبور برای این کارمند ارسال شود؟',
+  'Reset email sent to {email}.': 'ایمیل بازنشانی به {email} ارسال شد.', 'Could not send the email': 'ارسال ایمیل ممکن نشد',
+  'Login details were emailed to {email}. Temporary password: {pw}': 'اطلاعات ورود به {email} ایمیل شد. رمز عبور موقت: {pw}',
+  'The email could not be sent. Give these details to the employee in person — ID: {id}, temporary password: {pw}': 'ایمیل ارسال نشد. این اطلاعات را حضوری به کارمند بدهید — شناسه: {id}، رمز عبور موقت: {pw}',
+  'The app creates the account with the temporary password "password" and emails the login details to the employee.': 'برنامه حساب را با رمز عبور موقت «password» می‌سازد و اطلاعات ورود را برای کارمند ایمیل می‌کند.',
+  'Saved to Google Drive.': 'در گوگل درایو ذخیره شد.', 'The report was saved, but the PDF could not be uploaded to Google Drive.': 'گزارش ذخیره شد، اما فایل PDF در گوگل درایو بارگذاری نشد.',
+  'Projects only use the Daily Work and Approval sections.': 'برای پروژه‌ها فقط بخش‌های کارهای روزانه و تأیید استفاده می‌شود.',
+  '{n}. Customer & Sales Activity': '{n}. فعالیت مشتریان و فروش', '{n}. Financial Summary': '{n}. خلاصه مالی',
+  '{n}. Daily Work & Operations': '{n}. کارها و عملیات روزانه', '{n}. Report Approval': '{n}. تأیید گزارش',
+  'Write them down now, the password will not be shown again.': 'همین حالا یادداشت کنید، رمز عبور دوباره نمایش داده نمی‌شود.'
+};
+let lang = (() => { try { return localStorage.getItem('uniqon_lang') || 'en'; } catch { return 'en'; } })();
+const t = (s, vars = {}) => (lang === 'fa' && FA[s] || s).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+const LOC = () => lang === 'fa' ? 'fa-IR-u-ca-gregory' : 'en-US';
+
+// Translates static text already on screen; remembers the English original so it can switch back
+const ORIG = new WeakMap();
+function translateDom(root = document.body) {
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n; (n = w.nextNode());) {
+    const p = n.parentElement;
+    if (!p || p.closest('script,style,textarea,.secret,[data-notr]')) continue;
+    if (!ORIG.has(n)) { const k = n.nodeValue.trim(); if (!k || !(k in FA)) continue; ORIG.set(n, n.nodeValue); }
+    const o = ORIG.get(n), k = o.trim();
+    const v = lang === 'fa' ? o.replace(k, FA[k]) : o;
+    if (n.nodeValue !== v) n.nodeValue = v;
+  }
+  const els = root.querySelectorAll ? root.querySelectorAll('[placeholder]') : [];
+  els.forEach(el => {
+    if (!el.dataset.ph) { if (!(el.placeholder in FA)) return; el.dataset.ph = el.placeholder; }
+    el.placeholder = lang === 'fa' ? FA[el.dataset.ph] : el.dataset.ph;
+  });
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  $('#langBtn').textContent = lang === 'fa' ? 'English' : 'فارسی';
+  translateDom();
+}
+$('#langBtn').onclick = () => {
+  lang = lang === 'fa' ? 'en' : 'fa';
+  try { localStorage.setItem('uniqon_lang', lang); } catch {}
+  applyLang();
+};
+// "Show" button on every password field + no autocorrect/autocapitalize
+new MutationObserver(() => {
+  document.querySelectorAll('input[type=password]:not([data-pw])').forEach(inp => {
+    inp.dataset.pw = 1;
+    inp.setAttribute('autocapitalize', 'off'); inp.setAttribute('autocorrect', 'off'); inp.spellcheck = false;
+    const wrap = document.createElement('div'); wrap.className = 'pwwrap';
+    inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pwtoggle'; b.textContent = 'Show';
+    b.onclick = () => { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; };
+    wrap.appendChild(b);
+  });
+  if (lang === 'fa') translateDom();
+}).observe(document.body, {childList: true, subtree: true});
+let me = null;
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDT = ts => new Date(ts).toLocaleString(LOC(), {timeZone: TZ, weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+const fmtT = ts => new Date(ts).toLocaleTimeString(LOC(), {timeZone: TZ, hour:'numeric', minute:'2-digit'});
+const fmtD = ts => new Date(ts).toLocaleDateString(LOC(), {timeZone: TZ, weekday:'short', month:'short', day:'numeric'});
+const fmtDay = d => new Date(d + 'T12:00:00').toLocaleDateString(LOC(), {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+const hm = m => m == null ? 'In progress' : Math.floor(m/60) + ' h ' + String(m%60).padStart(2,'0') + ' min';
+const money = v => v == null || v === '' ? '—' : '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const num = v => v == null || v === '' ? '—' : String(v);
+function todayStr(d = new Date()) { return d.toLocaleDateString('en-CA', {timeZone: TZ}); }
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api' + path, {
+    method: opts.method || 'GET',
+    headers: {'Content-Type':'application/json'},
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || 'Error'); e.status = res.status; throw e; }
+  return data;
+}
+
+function header() {
+  $('#who').classList.toggle('hidden', !me);
+  $('#logoutBtn').classList.toggle('hidden', !me);
+  if (me) $('#whoName').textContent = me.name + ' (ID ' + me.emp_number + ')';
+}
+$('#logoutBtn').onclick = async () => { await api('/logout', {method:'POST'}); me = null; route(); };
+
+async function route() {
+  clearInterval(window._tick);
+  const reset = location.hash.match(/^#reset=([a-f0-9]{64})$/);
+  if (reset) { me = null; header(); return viewReset(reset[1]); }
+  try { me = await api('/me'); } catch { me = null; }
+  header();
+  if (!me) return viewLogin();
+  if (me.must_change) return viewChange();
+  if (me.role === 'admin') return viewAdmin();
+  return viewEmployee();
+}
+
+function tabs(names, onSel) {
+  app.innerHTML = `<div class="tabs" role="tablist">${names.map((n, i) => `<button role="tab" data-tab="${i}" aria-selected="${i===0}">${n}</button>`).join('')}</div><div id="panel"></div>`;
+  const btns = [...document.querySelectorAll('[data-tab]')];
+  const sel = i => { clearInterval(window._tick); btns.forEach((b, j) => b.setAttribute('aria-selected', i === j)); onSel(i); };
+  btns.forEach((b, i) => b.onclick = () => sel(i));
+  sel(0);
+}
+
+// ---------- Login ----------
+function viewLogin() {
+  app.innerHTML = `
+  <section class="card login">
+    <h1>Sign in</h1>
+    <p class="hint">Use your ID number or your email.</p>
+    <form id="f">
+      <label for="id">ID or email</label>
+      <input id="id" autocomplete="username" autocapitalize="off" required>
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="off" required>
+      <div id="msg"></div>
+      <button class="btn" style="margin-top:18px;width:100%">Sign in</button>
+    </form>
+    <p style="text-align:center;margin:16px 0 0"><button type="button" class="btn secondary small" id="forgot">Forgot password?</button></p>
+  </section>`;
+  $('#forgot').onclick = viewForgot;
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    try { await api('/login', {method:'POST', body:{identifier:$('#id').value, password:$('#pw').value.trim()}}); route(); }
+    catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+}
+
+// ---------- Forgot / reset password ----------
+function viewForgot() {
+  app.innerHTML = `
+  <section class="card login">
+    <h1>Reset your password</h1>
+    <p class="hint">Enter the email of your account. We will send you a link to create a new password.</p>
+    <form id="f">
+      <label for="fe">Email</label>
+      <input id="fe" type="email" autocapitalize="off" required>
+      <div id="msg"></div>
+      <button class="btn" style="margin-top:18px;width:100%">Send reset link</button>
+    </form>
+    <p style="text-align:center;margin:16px 0 0"><button type="button" class="btn secondary small" id="back">Back to sign in</button></p>
+  </section>`;
+  $('#back').onclick = viewLogin;
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    try {
+      await api('/forgot', {method:'POST', body:{email: $('#fe').value}});
+      $('#msg').innerHTML = '<div class="ok">' + esc(t('If that email has an account, a reset link is on its way. Check your inbox (and spam folder).')) + '</div>';
+    } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+}
+
+function viewReset(token) {
+  app.innerHTML = `
+  <section class="card login">
+    <h1>Create a new password</h1>
+    <p class="hint">Choose a new password with at least 8 characters.</p>
+    <form id="f">
+      <label for="n1">New password</label>
+      <input id="n1" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="n2">Repeat new password</label>
+      <input id="n2" type="password" autocomplete="new-password" minlength="8" required>
+      <div id="msg"></div>
+      <button class="btn" style="margin-top:18px;width:100%">Save password</button>
+    </form>
+  </section>`;
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    if ($('#n1').value !== $('#n2').value) return $('#msg').innerHTML = '<div class="err">' + esc(t('New passwords do not match')) + '</div>';
+    try {
+      await api('/reset', {method:'POST', body:{token, password: $('#n1').value}});
+      history.replaceState(null, '', location.pathname);
+      viewLogin();
+      $('#msg').innerHTML = '<div class="ok">' + esc(t('Password updated. You can sign in now.')) + '</div>';
+    } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+}
+
+// ---------- Change password ----------
+function viewChange() {
+  app.innerHTML = `
+  <section class="card login">
+    <h1>Create your new password</h1>
+    <p class="hint">Your current password is temporary. Choose a new one with at least 8 characters.</p>
+    <form id="f">
+      <label for="cur">Temporary password</label>
+      <input id="cur" type="password" autocomplete="off" required>
+      <label for="n1">New password</label>
+      <input id="n1" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="n2">Repeat new password</label>
+      <input id="n2" type="password" autocomplete="new-password" minlength="8" required>
+      <div id="msg"></div>
+      <button class="btn" style="margin-top:18px;width:100%">Save password</button>
+    </form>
+  </section>`;
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    if ($('#n1').value !== $('#n2').value) return $('#msg').innerHTML = '<div class="err">' + esc(t('New passwords do not match')) + '</div>';
+    try { await api('/change-password', {method:'POST', body:{current:$('#cur').value.trim(), next:$('#n1').value}}); route(); }
+    catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+}
+
+// ---------- Employee ----------
+function viewEmployee() {
+  app.innerHTML = '<div id="panel"></div>';
+  empReport();
+}
+
+const nIn = (id, label, money) => `<div><label for="${id}">${label}</label><input id="${id}" type="number" min="0" step="${money ? '0.01' : '1'}" inputmode="${money ? 'decimal' : 'numeric'}"></div>`;
+const tIn = (id, label, type = 'text') => `<div><label for="${id}">${label}</label><input id="${id}" type="${type}"></div>`;
+const area = (id, label) => `<label for="${id}">${label}</label><textarea id="${id}"></textarea>`;
+const REPORT_FIELDS = ['opening','closing','walk_ins','calls','quotations','orders','total_sales','payments_received','daily_expenses','payment_methods','completed_work','pending_followups','issues','prepared_by','signature'];
+
+function empReport() {
+  $('#panel').innerHTML = `
+  <section class="card">
+    <h1>Daily Report</h1>
+    <p class="hint">Submit to store management at the end of each business day. You can come back and edit it the same day.</p>
+    <form id="rf">
+      <div class="grid2">
+        ${tIn('date', 'Date', 'date')}
+        <div><label>Employee</label><input value="${esc(me.name)}" disabled></div>
+        ${tIn('opening', 'Opening', 'time')}
+        ${tIn('closing', 'Closing', 'time')}
+        <div><label>Job Title</label><input value="${esc(me.title || '—')}" disabled></div>
+      </div>
+
+      <label for="loc">Location (store / project)</label>
+      <div class="row" style="align-items:center">
+        <div style="min-width:200px"><select id="loc" required></select></div>
+        <div class="locbtns" style="flex:0;white-space:nowrap">
+          <button type="button" class="btn secondary small" id="locAdd">+ Add new</button>
+          <button type="button" class="btn secondary small" id="locDel">Remove</button>
+        </div>
+      </div>
+      <div id="locForm" class="hidden" style="background:#F7F6F1;border:1px solid var(--line);border-radius:8px;padding:4px 14px 14px;margin-top:10px">
+        <div class="grid2">
+          ${tIn('ln', 'Location name (e.g. Main Store, Smith Kitchen Remodel)')}
+          <div><label for="lt">Type</label><select id="lt"><option value="Show Run">Show Run</option><option value="Project" selected>Project</option><option value="Office">Office</option><option value="Other">Other</option></select></div>
+          ${tIn('la', 'Address')}
+          ${tIn('lc', 'City')}
+        </div>
+        <button type="button" class="btn small" id="locSave" style="margin-top:12px">Save location</button>
+        <button type="button" class="btn secondary small" id="locCancel" style="margin-top:12px">Cancel</button>
+        <p class="hint" style="margin:8px 0 0">You only add it once — it stays saved in your list for future reports.</p>
+      </div>
+
+      <p class="hint hidden" id="projNote" style="margin:14px 0 0">Projects only use the Daily Work and Approval sections.</p>
+      <div id="sales">
+      <div class="sec" data-sec="1">1. Customer &amp; Sales Activity</div>
+      <div class="grid2">
+        ${nIn('walk_ins', 'Walk-in Customers')}
+        ${nIn('calls', 'Phone Calls / Inquiries')}
+        ${nIn('quotations', 'Quotations Issued')}
+        ${nIn('orders', 'Orders Confirmed')}
+      </div>
+
+      <div class="sec" data-sec="2">2. Financial Summary</div>
+      <div class="grid2">
+        ${nIn('total_sales', 'Total Sales ($)', true)}
+        ${nIn('payments_received', 'Payments Received ($)', true)}
+        ${nIn('daily_expenses', 'Daily Expenses ($)', true)}
+        <div><label for="payment_methods">Payment Methods</label><select id="payment_methods"><option value="">Select…</option><option value="Cash">Cash</option><option value="Card">Card</option><option value="Other">Other</option></select></div>
+      </div>
+      </div>
+
+      <div class="sec" data-sec="3">3. Daily Work &amp; Operations</div>
+      ${area('completed_work', 'Completed Work / Deliveries / Customer Meetings')}
+      ${area('pending_followups', 'Pending Orders &amp; Customer Follow-ups')}
+      ${area('issues', 'Issues / Shortages / Management Attention')}
+
+      <div class="sec" data-sec="4">4. Report Approval</div>
+      <div class="grid2">
+        ${tIn('prepared_by', 'Prepared by')}
+        ${tIn('signature', 'Signature (type your full name)')}
+      </div>
+
+      <div id="msg"></div>
+      <button class="btn" style="margin-top:20px;width:100%">Submit report</button>
+    </form>
+  </section>`;
+
+  // Locations: saved list per employee, last one used is preselected
+  const LKEY = 'uniqon_loc_' + me.id;
+  const lsGet = () => { try { return localStorage.getItem(LKEY); } catch { return null; } };
+  const lsSet = v => { try { localStorage.setItem(LKEY, v); } catch {} };
+  let locs = [];
+  const locText = l => l.name + ' (' + t(l.type) + ')' + (l.address || l.city ? ' — ' + [l.address, l.city].filter(Boolean).join(', ') : '');
+  async function loadLocs(selectId) {
+    locs = await api('/my/locations');
+    $('#loc').innerHTML = (locs.length ? '<option value="">Select where you are working…</option>' : '<option value="">No saved locations — add one</option>') +
+      locs.map(l => `<option value="${l.id}">${esc(locText(l))}</option>`).join('');
+    const want = String(selectId || lsGet() || '');
+    if (locs.some(l => String(l.id) === want)) $('#loc').value = want;
+    $('#locDel').classList.toggle('hidden', !locs.length);
+    syncType();
+    if (!locs.length) $('#locForm').classList.remove('hidden');
+  }
+  // Parts 1 and 2 apply to Show Run / Office / Other, not to Projects
+  const SEC = ['', 'Customer & Sales Activity', 'Financial Summary', 'Daily Work & Operations', 'Report Approval'];
+  function syncType() {
+    const l = locs.find(x => String(x.id) === $('#loc').value);
+    const project = !!l && l.type === 'Project';
+    $('#sales').classList.toggle('hidden', project);
+    $('#projNote').classList.toggle('hidden', !project);
+    $('[data-sec="3"]').textContent = t('{n}. ' + SEC[3], {n: project ? 1 : 3});
+    $('[data-sec="4"]').textContent = t('{n}. ' + SEC[4], {n: project ? 2 : 4});
+  }
+  $('#loc').onchange = () => { $('#loc').value && lsSet($('#loc').value); syncType(); };
+  $('#locAdd').onclick = () => { $('#locForm').classList.remove('hidden'); $('#ln').focus(); };
+  $('#locCancel').onclick = () => $('#locForm').classList.add('hidden');
+  $('#locSave').onclick = async () => {
+    try {
+      const l = await api('/my/locations', {method:'POST', body:{name:$('#ln').value, type:$('#lt').value, address:$('#la').value, city:$('#lc').value}});
+      ['ln','la','lc'].forEach(k => $('#' + k).value = '');
+      $('#locForm').classList.add('hidden');
+      lsSet(l.id); await loadLocs(l.id);
+    } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+  $('#locDel').onclick = async () => {
+    const id = $('#loc').value; if (!id) return;
+    if (!confirm(t('Remove this location from your list? Past reports keep it.'))) return;
+    await api('/my/locations/' + id + '/remove', {method:'POST'});
+    await loadLocs();
+  };
+
+  const load = async () => {
+    $('#msg').innerHTML = '';
+    const date = $('#date').value;
+    const r = await api('/my/report?date=' + date);
+    // Keep older free-text payment methods visible in the dropdown
+    const pm = $('#payment_methods'), pmv = r && r.payment_methods;
+    if (pmv && ![...pm.options].some(o => o.value === pmv)) pm.add(new Option(pmv, pmv));
+    REPORT_FIELDS.forEach(k => $('#' + k).value = r && r[k] != null ? r[k] : '');
+    if (r && r.location_id) await loadLocs(r.location_id);
+    if (!r) {
+      $('#prepared_by').value = me.name;
+    } else {
+      $('#msg').innerHTML = '<div class="ok">' + esc(t('Report already submitted (last saved {t}). You can edit and resubmit.', {t: fmtDT(r.updated_at)})) + '</div>';
+    }
+  };
+  $('#date').value = todayStr();
+  $('#date').max = todayStr();
+  $('#date').onchange = load;
+  $('#rf').onsubmit = async e => {
+    e.preventDefault();
+    const body = {date: $('#date').value, location_id: $('#loc').value};
+    REPORT_FIELDS.forEach(k => body[k] = $('#' + k).value);
+    try {
+      const r = await api('/my/report', {method:'POST', body});
+      $('#msg').innerHTML = '<div class="ok">' + esc(t('Report submitted at {t}. Thank you!', {t: fmtT(r.updated_at)})) +
+        (r.drive === 'saved' ? ' ' + esc(t('Saved to Google Drive.')) : '') + '</div>' +
+        (r.drive === 'failed' ? '<div class="err">' + esc(t('The report was saved, but the PDF could not be uploaded to Google Drive.')) + '</div>' : '');
+    } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+  loadLocs().then(load);
+}
+
+// ---------- Admin ----------
+function viewAdmin() {
+  tabs(['My Report', 'All Reports', 'Employees'], i => [empReport, adminReports, adminEmps][i]());
+}
+
+function dateRange(title, extra = '') {
+  const first = new Date(); first.setDate(first.getDate() - 6);
+  return `
+    <h2>${title}</h2>
+    <div class="row noprint">
+      <div><label for="from" style="margin-top:0">From</label><input id="from" type="date" value="${todayStr(first)}"></div>
+      <div><label for="to" style="margin-top:0">To</label><input id="to" type="date" value="${todayStr()}"></div>
+      <div style="flex:0"><button class="btn" id="go">View</button></div>
+      ${extra}
+    </div>`;
+}
+
+function downloadCsv(name, rows) {
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = name;
+  a.click();
+}
+
+
+async function adminReports() {
+  $('#panel').innerHTML = `
+  <section class="card">
+    ${dateRange('Daily store reports', '<div style="flex:0"><button class="btn" id="pdfAll">Download PDF</button></div><div style="flex:0"><button class="btn secondary" id="print">Print</button></div>')}
+    <div id="total" style="margin:16px 0 6px;font-weight:600"></div>
+    <div id="out"></div>
+  </section>`;
+  let data = [];
+  const time12 = t => t ? new Date('2000-01-01T' + t).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}) : '—';
+  const txt = (label, v) => `<div style="margin-top:10px"><strong>${label}</strong><p class="txt">${v ? esc(v) : '—'}</p></div>`;
+  async function load() {
+    data = await api('/admin/reports?from=' + $('#from').value + '&to=' + $('#to').value);
+    const sum = k => data.reduce((a, r) => a + (Number(r[k]) || 0), 0);
+    $('#total').textContent = data.length
+      ? t('{n} report(s) · Sales {s} · Payments {p} · Expenses {e} · Walk-ins {w} · Quotes {q} · Orders {o}', {n: data.length, s: money(sum('total_sales')), p: money(sum('payments_received')), e: money(sum('daily_expenses')), w: sum('walk_ins'), q: sum('quotations'), o: sum('orders')})
+      : '';
+    $('#out').innerHTML = data.length ? data.map(r => `
+      <details class="rep">
+        <summary>${fmtDay(r.date)} — ${esc(r.name)}${r.title ? ', ' + esc(r.title) : ''} · ${esc(r.location || t('No location'))}${r.location_type === 'Project' ? '' : ' · ' + t('Sales') + ' ' + money(r.total_sales)}</summary>
+        <p class="noprint" style="margin:8px 0"><a class="btn secondary small" href="/api/admin/reports/${r.id}.pdf">PDF</a></p>
+        <dl>
+          <dt>Employee</dt><dd>${esc(r.name)} (ID ${esc(r.emp_number)})${r.title ? ' — ' + esc(r.title) : ''}</dd>
+          <dt>Location</dt><dd>${esc(r.location || '—')}${r.location_type ? ' (' + esc(t(r.location_type === 'Store' ? 'Show Run' : r.location_type)) + ')' : ''}</dd>
+          <dt>Opening / Closing</dt><dd>${time12(r.opening)} – ${time12(r.closing)}</dd>
+        </dl>
+        <dl class="${r.location_type === 'Project' ? 'hidden' : ''}">
+          <dt>Walk-in Customers</dt><dd>${num(r.walk_ins)}</dd>
+          <dt>Phone Calls / Inquiries</dt><dd>${num(r.calls)}</dd>
+          <dt>Quotations Issued</dt><dd>${num(r.quotations)}</dd>
+          <dt>Orders Confirmed</dt><dd>${num(r.orders)}</dd>
+          <dt>Total Sales</dt><dd>${money(r.total_sales)}</dd>
+          <dt>Payments Received</dt><dd>${money(r.payments_received)}</dd>
+          <dt>Daily Expenses</dt><dd>${money(r.daily_expenses)}</dd>
+          <dt>Payment Methods</dt><dd>${esc(r.payment_methods) || '—'}</dd>
+        </dl>
+        ${txt('Completed Work / Deliveries / Customer Meetings', r.completed_work)}
+        ${txt('Pending Orders &amp; Customer Follow-ups', r.pending_followups)}
+        ${txt('Issues / Shortages / Management Attention', r.issues)}
+        <dl style="margin-top:10px">
+          <dt>Prepared by</dt><dd>${esc(r.prepared_by) || '—'}</dd>
+          <dt>Signature</dt><dd>${esc(r.signature) || '—'}</dd>
+          <dt>Last saved</dt><dd>${fmtDT(r.updated_at)}</dd>
+        </dl>
+      </details>`).join('') : '<div class="empty">No reports in this date range.</div>';
+  }
+  $('#go').onclick = load;
+  $('#pdfAll').onclick = () => { location.href = '/api/admin/reports.pdf?from=' + $('#from').value + '&to=' + $('#to').value; };
+  $('#print').onclick = () => { document.querySelectorAll('details.rep').forEach(d => d.open = true); window.print(); };
+  load();
+}
+
+async function adminEmps() {
+  $('#panel').innerHTML = `
+  <section class="card">
+    <h2>Add employee</h2>
+    <p class="hint">The app creates the account with the temporary password "password" and emails the login details to the employee.</p>
+    <form id="f" class="row">
+      <div><label for="nm" style="margin-top:0">Full name</label><input id="nm" required></div>
+      <div><label for="em" style="margin-top:0">Email</label><input id="em" type="email" required></div>
+      <div><label for="tt" style="margin-top:0">Job title</label><input id="tt" placeholder="e.g. Superintendent, Sales" list="titles"></div>
+      <div style="flex:0"><button class="btn">Create</button></div>
+    </form>
+    <div id="msg"></div>
+  </section>
+  <section class="card">
+    <h2>Employees</h2>
+    <p class="hint">Edit a job title directly in the table — it saves automatically.</p>
+    <datalist id="titles"></datalist>
+    <div id="list" class="tablewrap"></div>
+  </section>`;
+  async function list() {
+    const rows = await api('/admin/employees');
+    $('#list').innerHTML = '<table><thead><tr><th>ID</th><th>Name</th><th>Job title</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>' +
+      rows.map(r => `<tr><td>${esc(r.emp_number)}</td><td>${esc(r.name)}${r.role==='admin'?' <span class="pill">Admin</span>':''}</td><td><input data-title="${r.id}" value="${esc(r.title)}" placeholder="Add title" list="titles" style="min-width:150px;padding:6px 8px"></td><td>${esc(r.email)}</td>
+        <td>${r.active ? 'Active' : '<span class="pill off">Inactive</span>'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn secondary small" data-reset="${r.id}">Send reset email</button>
+          ${r.id !== me.id ? `<button class="btn secondary small" data-active="${r.id}" data-to="${r.active?0:1}">${r.active?'Deactivate':'Activate'}</button>` : ''}
+        </td></tr>`).join('') + '</tbody></table>';
+    $('#titles').innerHTML = [...new Set(['Superintendent','Project Manager','Sales Associate','Store Manager','Designer','Installer', ...rows.map(r => r.title).filter(Boolean)])].map(t => `<option value="${esc(t)}">`).join('');
+    document.querySelectorAll('[data-title]').forEach(inp => inp.onchange = async () => {
+      try { await api('/admin/employees/' + inp.dataset.title + '/title', {method:'POST', body:{title: inp.value}}); inp.style.borderColor = 'var(--in)'; }
+      catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+    });
+    document.querySelectorAll('[data-reset]').forEach(b => b.onclick = async () => {
+      if (!confirm(t('Send a password reset email to this employee?'))) return;
+      try {
+        const r = await api('/admin/employees/' + b.dataset.reset + '/reset', {method:'POST'});
+        $('#msg').innerHTML = '<div class="ok">' + esc(t('Reset email sent to {email}.', {email: r.email})) + '</div>';
+      } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+    });
+    document.querySelectorAll('[data-active]').forEach(b => b.onclick = async () => {
+      await api('/admin/employees/' + b.dataset.active + '/active', {method:'POST', body:{active: b.dataset.to === '1'}});
+      list();
+    });
+  }
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    try {
+      const r = await api('/admin/employees', {method:'POST', body:{name:$('#nm').value, email:$('#em').value, title:$('#tt').value}});
+      $('#msg').innerHTML = '<div class="ok">' + esc(t('Employee created: {name}', {name: r.name})) + ' (ID ' + esc(r.emp_number) + ')<br>' +
+        (r.emailed ? esc(t('Login details were emailed to {email}. Temporary password: {pw}', {email: r.email, pw: r.temp_password}))
+                   : '</div><div class="err">' + esc(t('The email could not be sent. Give these details to the employee in person — ID: {id}, temporary password: {pw}', {id: r.emp_number, pw: r.temp_password}))) + '</div>';
+      $('#f').reset(); list();
+    } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+  };
+  list();
+}
+
+applyLang();
+route();
+</script>
+</body>
+</html>

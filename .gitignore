@@ -1,0 +1,6 @@
+node_modules
+.env
+.env.local
+data
+.vercel
+.google-token.txt
