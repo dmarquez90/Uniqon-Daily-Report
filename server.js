@@ -305,7 +305,7 @@ app.get('/api/admin/reports/:id.pdf', auth, notForced, adminOnly, h(async (req, 
 
 // ---------- Administration ----------
 app.get('/api/admin/employees', auth, notForced, adminOnly, h(async (req, res) => {
-  const rows = await query('SELECT * FROM employees ORDER BY CAST(emp_number AS INTEGER)');
+  const rows = await query('SELECT * FROM employees WHERE deleted_at IS NULL ORDER BY CAST(emp_number AS INTEGER)');
   res.json(rows.map(publicEmp));
 }));
 
@@ -344,6 +344,20 @@ app.post('/api/admin/employees/:id/name', auth, notForced, adminOnly, h(async (r
 app.post('/api/admin/employees/:id/title', auth, notForced, adminOnly, h(async (req, res) => {
   const r = await query('UPDATE employees SET title = $1 WHERE id = $2 RETURNING id', [String(req.body.title || '').trim().slice(0, 100), Number(req.params.id) || 0]);
   if (!r.length) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+}));
+
+// Delete: the person disappears from the list, cannot sign in and the email can be reused.
+// Past reports (and their PDFs in Drive) are kept with the employee's name.
+app.post('/api/admin/employees/:id/delete', auth, notForced, adminOnly, h(async (req, res) => {
+  const id = Number(req.params.id) || 0;
+  if (id === req.emp.id) return res.status(400).json({ error: 'You cannot delete your own account' });
+  const r = await query(`UPDATE employees SET deleted_at = now(), active = FALSE, email = email || '#deleted-' || id,
+      password_hash = 'deleted' WHERE id = $1 AND deleted_at IS NULL RETURNING id`, [id]);
+  if (!r.length) return res.status(404).json({ error: 'Not found' });
+  await query('DELETE FROM password_resets WHERE employee_id = $1', [id]);
+  await query('DELETE FROM employee_locations WHERE employee_id = $1', [id]);
+  await query('DELETE FROM report_photos WHERE employee_id = $1 AND report_id IS NULL', [id]);
   res.json({ ok: true });
 }));
 

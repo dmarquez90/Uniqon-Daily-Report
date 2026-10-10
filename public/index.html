@@ -28,7 +28,11 @@ header{background:#fff;color:var(--ink);border-bottom:4px solid var(--gold);padd
 .brand{display:flex;align-items:center;gap:12px}.brand img{height:54px;width:auto;display:block}.brand small{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;border-inline-start:2px solid var(--gold);padding-inline-start:12px}
 header .who{font-size:14px;color:var(--muted);text-align:end;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 header button{background:#fff;border:1px solid var(--teal);color:var(--teal);border-radius:6px;padding:6px 12px;cursor:pointer}
-main{max-width:880px;margin:0 auto;padding:22px 16px 60px}
+main{max-width:1240px;margin:0 auto;padding:22px 16px 60px}
+.narrow{max-width:880px;margin-left:auto;margin-right:auto}
+#list td{vertical-align:middle}
+.btn.danger{background:#fff;color:var(--out);border:1px solid #D9A8A8}
+.btn.danger:hover{background:var(--out-soft)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:18px}
 h1{font-size:22px;margin:0 0 6px;font-weight:600}
 h2{font-size:18px;margin:0 0 12px;font-weight:600}
@@ -194,7 +198,9 @@ const FA = {
   'Edit a name or job title directly in the table — it saves automatically.': 'نام یا سمت شغلی را مستقیماً در جدول ویرایش کنید — به‌طور خودکار ذخیره می‌شود.',
   'Edit a job title directly in the table — it saves automatically.': 'سمت شغلی را مستقیماً در جدول ویرایش کنید — به‌طور خودکار ذخیره می‌شود.',
   'ID': 'شناسه', 'Name': 'نام', 'Status': 'وضعیت', 'Admin': 'مدیر', 'Active': 'فعال', 'Inactive': 'غیرفعال',
-  'Deactivate': 'غیرفعال کردن', 'Activate': 'فعال کردن',
+  'Deactivate': 'غیرفعال کردن', 'Activate': 'فعال کردن', 'Delete': 'حذف',
+  'Delete {name}? They will no longer be able to sign in. Their past reports are kept.': '{name} حذف شود؟ دیگر نمی‌تواند وارد شود. گزارش‌های قبلی او حفظ می‌شوند.',
+  '{name} was deleted.': '{name} حذف شد.', 'You cannot delete your own account': 'نمی‌توانید حساب خودتان را حذف کنید',
   'e.g. Superintendent, Sales': 'مثلاً سرپرست، فروش', 'Add title': 'افزودن سمت',
   // Server messages
   'Enter your ID or email and password': 'شناسه یا ایمیل و رمز عبور را وارد کنید',
@@ -449,7 +455,7 @@ const REPORT_FIELDS = ['opening','closing','walk_ins','calls','quotations','orde
 
 function empReport() {
   $('#panel').innerHTML = `
-  <section class="card">
+  <section class="card narrow">
     <h1>Daily Report</h1>
     <p class="hint">Submit to store management at the end of each business day. You can come back and edit it the same day.</p>
     <form id="rf">
@@ -792,7 +798,8 @@ async function adminEmps() {
         <td>${r.active ? 'Active' : '<span class="pill off">Inactive</span>'}</td>
         <td style="white-space:nowrap">
           <button class="btn secondary small" data-reset="${r.id}">Send reset email</button>
-          ${r.id !== me.id ? `<button class="btn secondary small" data-active="${r.id}" data-to="${r.active?0:1}">${r.active?'Deactivate':'Activate'}</button>` : ''}
+          ${r.id !== me.id ? `<button class="btn secondary small" data-active="${r.id}" data-to="${r.active?0:1}">${r.active?'Deactivate':'Activate'}</button>
+          <button class="btn danger small" data-del="${r.id}" data-nm="${esc(r.name)}">Delete</button>` : ''}
         </td></tr>`).join('') + '</tbody></table>';
     $('#titles').innerHTML = [...new Set(['Superintendent','Project Manager','Sales Associate','Store Manager','Designer','Installer', ...rows.map(r => r.title).filter(Boolean)])].map(t => `<option value="${esc(t)}">`).join('');
     document.querySelectorAll('[data-name]').forEach(inp => inp.onchange = async () => {
@@ -805,6 +812,14 @@ async function adminEmps() {
     document.querySelectorAll('[data-title]').forEach(inp => inp.onchange = async () => {
       try { await api('/admin/employees/' + inp.dataset.title + '/title', {method:'POST', body:{title: inp.value}}); inp.style.borderColor = 'var(--in)'; }
       catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+    });
+    document.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+      if (!confirm(t('Delete {name}? They will no longer be able to sign in. Their past reports are kept.', {name: b.dataset.nm}))) return;
+      try {
+        await api('/admin/employees/' + b.dataset.del + '/delete', {method:'POST'});
+        $('#msg').innerHTML = '<div class="ok">' + esc(t('{name} was deleted.', {name: b.dataset.nm})) + '</div>';
+        list();
+      } catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
     });
     document.querySelectorAll('[data-reset]').forEach(b => b.onclick = async () => {
       if (!confirm(t('Send a password reset email to this employee?'))) return;
