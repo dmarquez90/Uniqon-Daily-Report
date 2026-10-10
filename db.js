@@ -38,6 +38,15 @@ CREATE TABLE IF NOT EXISTS daily_reports (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (employee_id, report_date)
 );
+CREATE TABLE IF NOT EXISTS report_photos (
+  id SERIAL PRIMARY KEY,
+  employee_id INTEGER NOT NULL REFERENCES employees(id),
+  report_id INTEGER REFERENCES daily_reports(id) ON DELETE CASCADE,
+  mime TEXT NOT NULL,
+  data BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_photos_report ON report_photos(report_id);
 CREATE TABLE IF NOT EXISTS password_resets (
   token_hash TEXT PRIMARY KEY,
   employee_id INTEGER NOT NULL REFERENCES employees(id),

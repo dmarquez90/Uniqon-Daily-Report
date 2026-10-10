@@ -112,6 +112,26 @@ function reportPage(doc, x) {
   CONTACT.forEach((t, i) => doc.font('Helvetica').fontSize(8.5).fillColor(BLACK).text(t, 400, cy + i * 12.5, { lineBreak: false }));
 }
 
+// Photos attached to the report: 2 x 2 per page, each fitted inside its cell
+function photoPages(doc, x) {
+  const photos = x.photos || [];
+  const cellW = (W - 16) / 2, cellH = 270;
+  for (let i = 0; i < photos.length; i++) {
+    if (i % 4 === 0) {
+      doc.addPage();
+      let y = header(doc);
+      doc.font('Helvetica-Bold').fontSize(11).fillColor(BLACK).text(`PHOTOS — ${shortDate(x.date)} — ${x.name}`, L, y);
+      doc.font('Helvetica').fontSize(9).fillColor(GRAY).text(show(x.location), L, y + 15, { width: W, lineBreak: false, ellipsis: true });
+    }
+    const col = i % 2, row = Math.floor((i % 4) / 2);
+    const cx = L + col * (cellW + 16), cy = 168 + row * (cellH + 20);
+    doc.rect(cx, cy, cellW, cellH).lineWidth(0.5).strokeColor('#D8DBDF').stroke();
+    try { doc.image(photos[i], cx + 6, cy + 6, { fit: [cellW - 12, cellH - 12], align: 'center', valign: 'center' }); }
+    catch { doc.font('Helvetica').fontSize(9).fillColor(GRAY).text('Image could not be displayed', cx + 10, cy + cellH / 2); }
+    doc.font('Helvetica').fontSize(8).fillColor(GRAY).text(`Photo ${i + 1} of ${photos.length}`, cx, cy + cellH + 4, { width: cellW, align: 'center' });
+  }
+}
+
 function summaryPage(doc, reports, from, to) {
   let y = header(doc);
   doc.font('Helvetica-Bold').fontSize(14).fillColor(TEAL).text('DAILY REPORTS SUMMARY', L, y);
@@ -147,7 +167,7 @@ function buildReportsPdf(reports, from, to) {
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
     const sorted = [...reports].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : a.name.localeCompare(b.name));
-    sorted.forEach((x, i) => { if (i) doc.addPage(); reportPage(doc, x); });
+    sorted.forEach((x, i) => { if (i) doc.addPage(); reportPage(doc, x); photoPages(doc, x); });
     if (sorted.length > 1) { doc.addPage(); summaryPage(doc, sorted, from || sorted[0].date, to || sorted.at(-1).date); }
     if (!sorted.length) { header(doc); doc.font('Helvetica').fontSize(12).text('No reports in this date range.', L, 140); }
     const range = doc.bufferedPageRange();

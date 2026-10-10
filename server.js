@@ -192,13 +192,43 @@ app.post('/api/my/locations/:id/remove', auth, notForced, h(async (req, res) => 
   res.json({ ok: true });
 }));
 
-const reportRow = r => ({ id: r.id, date: r.report_date, updated_at: r.updated_at, emp_number: r.emp_number, name: r.name, title: r.title, drive_file_id: r.drive_file_id, ...r.data });
+const reportRow = r => ({ id: r.id, date: r.report_date, updated_at: r.updated_at, emp_number: r.emp_number, name: r.name, title: r.title, drive_file_id: r.drive_file_id, ...r.data, photo_ids: r.photo_ids || [] });
+
+// ---------- Report photos (compressed to JPEG in the browser, stored in Postgres) ----------
+const MAX_PHOTOS = 10;
+const photoIdsSql = `(SELECT coalesce(array_agg(p.id ORDER BY p.id), '{}') FROM report_photos p WHERE p.report_id = r.id) AS photo_ids`;
+
+app.post('/api/my/photos', auth, notForced, express.raw({ type: ['image/jpeg', 'image/png'], limit: '3mb' }), h(async (req, res) => {
+  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: 'Invalid image' });
+  const mime = req.get('content-type');
+  // Clean up photos that were uploaded but never attached to a report
+  await query("DELETE FROM report_photos WHERE employee_id = $1 AND report_id IS NULL AND created_at < now() - interval '2 days'", [req.emp.id]);
+  const { id } = await one('INSERT INTO report_photos (employee_id, mime, data) VALUES ($1,$2,$3) RETURNING id', [req.emp.id, mime, req.body]);
+  res.json({ id });
+}));
+
+app.get('/api/photos/:id', auth, notForced, h(async (req, res) => {
+  const p = await one('SELECT employee_id, mime, data FROM report_photos WHERE id = $1', [Number(req.params.id) || 0]);
+  if (!p || (p.employee_id !== req.emp.id && req.emp.role !== 'admin')) return res.status(404).json({ error: 'Not found' });
+  res.setHeader('Content-Type', p.mime);
+  res.setHeader('Cache-Control', 'private, max-age=86400');
+  res.send(Buffer.from(p.data));
+}));
+
+// Loads image bytes for the PDF
+async function withPhotos(reports) {
+  const ids = reports.flatMap(r => r.photo_ids || []);
+  if (!ids.length) return reports;
+  const rows = await query('SELECT id, data FROM report_photos WHERE id = ANY($1::int[])', [ids]);
+  const map = new Map(rows.map(p => [p.id, Buffer.from(p.data)]));
+  return reports.map(r => ({ ...r, photos: (r.photo_ids || []).map(id => map.get(id)).filter(Boolean) }));
+}
 
 app.get('/api/my/report', auth, notForced, h(async (req, res) => {
   const date = String(req.query.date || '');
   if (!isDate(date)) return res.status(400).json({ error: 'Invalid date' });
-  const row = await one('SELECT * FROM daily_reports WHERE employee_id = $1 AND report_date = $2', [req.emp.id, date]);
-  res.json(row ? { date, updated_at: row.updated_at, ...row.data } : null);
+  const row = await one(`SELECT r.*, ${photoIdsSql} FROM daily_reports r WHERE r.employee_id = $1 AND r.report_date = $2`, [req.emp.id, date]);
+  res.json(row ? { date, updated_at: row.updated_at, ...row.data, photo_ids: row.photo_ids } : null);
 }));
 
 app.post('/api/my/report', auth, notForced, h(async (req, res) => {
@@ -211,16 +241,21 @@ app.post('/api/my/report', auth, notForced, h(async (req, res) => {
   if (!loc) return res.status(400).json({ error: 'Select the location where you are working' });
   if (loc.type === 'Project') { REPORT_NUM.forEach(k => data[k] = null); data.payment_methods = ''; } // parts 1 and 2 do not apply
   Object.assign(data, { location_id: loc.id, location_name: loc.name, location_type: loc.type, location: locLabel(loc), title: req.emp.title || '' });
+  const photoIds = [...new Set((Array.isArray(req.body.photo_ids) ? req.body.photo_ids : []).map(Number).filter(Number.isInteger))].slice(0, MAX_PHOTOS);
   const row = await one(`INSERT INTO daily_reports (employee_id, report_date, data) VALUES ($1,$2,$3)
       ON CONFLICT (employee_id, report_date) DO UPDATE SET data = excluded.data, updated_at = now()
       RETURNING *`, [req.emp.id, date, data]);
+  // Attach the selected photos (only the employee's own) and drop the ones that were removed
+  await query('UPDATE report_photos SET report_id = $1 WHERE employee_id = $2 AND id = ANY($3::int[]) AND (report_id IS NULL OR report_id = $1)', [row.id, req.emp.id, photoIds]);
+  await query('DELETE FROM report_photos WHERE report_id = $1 AND NOT (id = ANY($2::int[]))', [row.id, photoIds]);
+  row.photo_ids = (await query('SELECT id FROM report_photos WHERE report_id = $1 ORDER BY id', [row.id])).map(p => p.id);
 
   // Save the PDF to Google Drive: MBG-Daily Report/<Location name>/
   let driveStatus = 'off';
   if (drive.enabled()) {
     try {
       const report = reportRow({ ...row, emp_number: req.emp.emp_number, name: req.emp.name, title: req.emp.title });
-      const pdf = await buildReportsPdf([report]);
+      const pdf = await buildReportsPdf(await withPhotos([report]));
       const fileName = `${date} - ${req.emp.name}.pdf`.replace(/[\\/]/g, '-');
       const id = await drive.savePdf(pdf, fileName, loc.name, row.drive_file_id);
       if (id !== row.drive_file_id) {
@@ -246,7 +281,7 @@ async function reportsBetween(fromQ, toQ) {
   const from = isDate(fromQ) ? fromQ : '0000-01-01';
   const to = isDate(toQ) ? toQ : '9999-12-31';
   const rows = await query(`
-    SELECT r.id, r.report_date, r.data, r.updated_at, r.drive_file_id, e.emp_number, e.name, e.title
+    SELECT r.id, r.report_date, r.data, r.updated_at, r.drive_file_id, e.emp_number, e.name, e.title, ${photoIdsSql}
     FROM daily_reports r JOIN employees e ON e.id = r.employee_id
     WHERE r.report_date >= $1 AND r.report_date <= $2
     ORDER BY r.report_date DESC, e.name`, [from, to]);
@@ -265,14 +300,14 @@ app.get('/api/admin/reports.pdf', auth, notForced, adminOnly, h(async (req, res)
   const reports = await reportsBetween(req.query.from, req.query.to);
   const from = isDate(req.query.from) ? req.query.from : (reports.at(-1)?.date || '');
   const to = isDate(req.query.to) ? req.query.to : (reports[0]?.date || '');
-  sendPdf(res, await buildReportsPdf(reports, from, to), `MBG_Daily_Reports_${from}_to_${to}.pdf`);
+  sendPdf(res, await buildReportsPdf(await withPhotos(reports), from, to), `MBG_Daily_Reports_${from}_to_${to}.pdf`);
 }));
 
 app.get('/api/admin/reports/:id.pdf', auth, notForced, adminOnly, h(async (req, res) => {
-  const r = (await query(`SELECT r.id, r.report_date, r.data, r.updated_at, r.drive_file_id, e.emp_number, e.name, e.title
+  const r = (await query(`SELECT r.id, r.report_date, r.data, r.updated_at, r.drive_file_id, e.emp_number, e.name, e.title, ${photoIdsSql}
     FROM daily_reports r JOIN employees e ON e.id = r.employee_id WHERE r.id = $1`, [Number(req.params.id) || 0])).map(reportRow)[0];
   if (!r) return res.status(404).json({ error: 'Not found' });
-  sendPdf(res, await buildReportsPdf([r]), `${r.date} - ${r.name}.pdf`.replace(/["\\/]/g, '-'));
+  sendPdf(res, await buildReportsPdf(await withPhotos([r])), `${r.date} - ${r.name}.pdf`.replace(/["\\/]/g, '-'));
 }));
 
 // ---------- Administration ----------
