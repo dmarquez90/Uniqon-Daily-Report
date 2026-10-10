@@ -210,7 +210,7 @@ const FA = {
   'Login details were emailed to {email}. Temporary password: {pw}': 'اطلاعات ورود به {email} ایمیل شد. رمز عبور موقت: {pw}',
   'The email could not be sent. Give these details to the employee in person — ID: {id}, temporary password: {pw}': 'ایمیل ارسال نشد. این اطلاعات را حضوری به کارمند بدهید — شناسه: {id}، رمز عبور موقت: {pw}',
   'The app creates the account with the temporary password "password" and emails the login details to the employee.': 'برنامه حساب را با رمز عبور موقت «password» می‌سازد و اطلاعات ورود را برای کارمند ایمیل می‌کند.',
-  'Saved to Google Drive.': 'در گوگل درایو ذخیره شد.', 'The report was saved, but the PDF could not be uploaded to Google Drive.': 'گزارش ذخیره شد، اما فایل PDF در گوگل درایو بارگذاری نشد.',
+  'Saving…': 'در حال ذخیره…', 'Saved to Google Drive.': 'در گوگل درایو ذخیره شد.', 'The report was saved, but the PDF could not be uploaded to Google Drive.': 'گزارش ذخیره شد، اما فایل PDF در گوگل درایو بارگذاری نشد.',
   'Projects only use the Daily Work and Approval sections.': 'برای پروژه‌ها فقط بخش‌های کارهای روزانه و تأیید استفاده می‌شود.',
   '{n}. Customer & Sales Activity': '{n}. فعالیت مشتریان و فروش', '{n}. Financial Summary': '{n}. خلاصه مالی',
   '{n}. Daily Work & Operations': '{n}. کارها و عملیات روزانه', '{n}. Report Approval': '{n}. تأیید گزارش',
@@ -557,8 +557,14 @@ function empReport() {
     e.preventDefault();
     const body = {date: $('#date').value, location_id: $('#loc').value};
     REPORT_FIELDS.forEach(k => body[k] = $('#' + k).value);
+    // Block double clicks while the report and its PDF are being saved
+    const btn = $('#rf > .btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = t('Saving…');
     try {
-      const r = await api('/my/report', {method:'POST', body});
+      const r = await api('/my/report', {method:'POST', body}).finally(() => { btn.disabled = false; btn.textContent = label; });
       $('#msg').innerHTML = '<div class="ok">' + esc(t('Report submitted at {t}. Thank you!', {t: fmtT(r.updated_at)})) +
         (r.drive === 'saved' ? ' ' + esc(t('Saved to Google Drive.')) : '') + '</div>' +
         (r.drive === 'failed' ? '<div class="err">' + esc(t('The report was saved, but the PDF could not be uploaded to Google Drive.')) + '</div>' : '');

@@ -72,4 +72,9 @@ async function savePdf(buffer, fileName, folderName, existingId) {
   return made.id;
 }
 
-module.exports = { savePdf, enabled };
+async function deleteFile(id) {
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${id}`, { method: 'DELETE', headers: { Authorization: 'Bearer ' + await accessToken() } });
+  if (!r.ok && r.status !== 404) throw new Error('Drive delete failed: ' + r.status);
+}
+
+module.exports = { savePdf, deleteFile, enabled };

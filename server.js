@@ -223,7 +223,16 @@ app.post('/api/my/report', auth, notForced, h(async (req, res) => {
       const pdf = await buildReportsPdf([report]);
       const fileName = `${date} - ${req.emp.name}.pdf`.replace(/[\\/]/g, '-');
       const id = await drive.savePdf(pdf, fileName, loc.name, row.drive_file_id);
-      if (id !== row.drive_file_id) await query('UPDATE daily_reports SET drive_file_id = $1 WHERE id = $2', [id, row.id]);
+      if (id !== row.drive_file_id) {
+        // Only one request may attach its file; if another one (e.g. a double click) won, remove our duplicate
+        const won = await query('UPDATE daily_reports SET drive_file_id = $1 WHERE id = $2 AND drive_file_id IS NOT DISTINCT FROM $3 RETURNING id',
+          [id, row.id, row.drive_file_id]);
+        if (!won.length) {
+          const cur = await one('SELECT drive_file_id FROM daily_reports WHERE id = $1', [row.id]);
+          await drive.deleteFile(id).catch(() => {});
+          if (cur?.drive_file_id) await drive.savePdf(pdf, fileName, loc.name, cur.drive_file_id); // keep the latest content
+        }
+      }
       driveStatus = 'saved';
     } catch (e) {
       console.error('Drive upload failed:', e.message);
