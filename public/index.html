@@ -74,8 +74,15 @@ textarea{font:inherit;color:inherit;width:100%;padding:11px 12px;border:1px soli
 .rep dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:6px 0}
 .rep dt{color:var(--muted)} .rep dd{margin:0}
 .rep .txt{white-space:pre-wrap;margin:4px 0 0}
-details.rep{border-bottom:1px solid var(--line);padding:10px 0}
-details.rep summary{cursor:pointer;font-weight:500}
+.repcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.rephead{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.rephead .info{flex:1 1 260px;min-width:0}
+.rephead .info b{display:block}
+.rephead .meta{color:var(--muted);font-size:14px}
+.rephead .acts{display:flex;gap:8px;flex-wrap:wrap}
+a.btn{text-decoration:none;display:inline-block}
+details.rep{margin-top:8px}
+details.rep summary{cursor:pointer;color:var(--teal);font-weight:500}
 @media print{header .who,.tabs,.noprint{display:none!important}.card{border:0}details.rep{break-inside:avoid}}
 [dir=rtl] body,[dir=rtl] button,[dir=rtl] input,[dir=rtl] select,[dir=rtl] textarea{font-family:Vazirmatn,Barlow,system-ui,sans-serif}
 [dir=rtl] .sec{letter-spacing:0}
@@ -123,6 +130,7 @@ button,.btn,select,input,textarea{touch-action:manipulation}
   .rep dl{grid-template-columns:1fr}
   .rep dt{margin-top:6px;font-size:13px}
   details.rep summary{padding:6px 0;line-height:1.35}
+  .rephead .acts{width:100%}.rephead .acts .btn{flex:1;text-align:center}
   /* Employee table becomes stacked cards */
   #list table,#list thead,#list tbody,#list tr,#list td{display:block;width:100%}
   #list thead{display:none}
@@ -222,7 +230,8 @@ const FA = {
   'Login details were emailed to {email}. Temporary password: {pw}': 'اطلاعات ورود به {email} ایمیل شد. رمز عبور موقت: {pw}',
   'The email could not be sent. Give these details to the employee in person — ID: {id}, temporary password: {pw}': 'ایمیل ارسال نشد. این اطلاعات را حضوری به کارمند بدهید — شناسه: {id}، رمز عبور موقت: {pw}',
   'The app creates the account with the temporary password "password" and emails the login details to the employee.': 'برنامه حساب را با رمز عبور موقت «password» می‌سازد و اطلاعات ورود را برای کارمند ایمیل می‌کند.',
-  'Saving…': 'در حال ذخیره…', 'Photos': 'عکس‌ها', '+ Add photos': '+ افزودن عکس',
+  'Saving…': 'در حال ذخیره…', 'Open in Drive': 'باز کردن در درایو', 'View details': 'مشاهده جزئیات',
+  'Each report has its own PDF, so you can share one report without showing the others.': 'هر گزارش PDF جداگانه دارد، بنابراین می‌توانید یک گزارش را بدون نمایش بقیه به اشتراک بگذارید.', 'Photos': 'عکس‌ها', '+ Add photos': '+ افزودن عکس',
   'Optional. Add up to 10 photos (work progress, deliveries, issues). They appear at the end of the PDF.': 'اختیاری. تا ۱۰ عکس اضافه کنید (پیشرفت کار، تحویل‌ها، مشکلات). در انتهای فایل PDF نمایش داده می‌شوند.',
   'Submit this report?': 'این گزارش ارسال شود؟', 'Please check the information before sending. After it is submitted, the form will be cleared.': 'لطفاً قبل از ارسال اطلاعات را بررسی کنید. پس از ارسال، فرم پاک می‌شود.',
   'Yes, submit': 'بله، ارسال شود', 'Wait for the photos to finish uploading': 'صبر کنید تا بارگذاری عکس‌ها تمام شود',
@@ -678,7 +687,7 @@ function viewAdmin() {
 }
 
 function dateRange(title, extra = '') {
-  const first = new Date(); first.setDate(first.getDate() - 6);
+  const first = new Date(); first.setDate(first.getDate() - 30);
   return `
     <h2>${title}</h2>
     <div class="row noprint">
@@ -701,7 +710,8 @@ function downloadCsv(name, rows) {
 async function adminReports() {
   $('#panel').innerHTML = `
   <section class="card">
-    ${dateRange('Daily store reports', '<div style="flex:0"><button class="btn" id="pdfAll">Download PDF</button></div><div style="flex:0"><button class="btn secondary" id="print">Print</button></div>')}
+    ${dateRange('Daily store reports')}
+    <p class="hint" style="margin:10px 0 0">Each report has its own PDF, so you can share one report without showing the others.</p>
     <div id="total" style="margin:16px 0 6px;font-weight:600"></div>
     <div id="out"></div>
   </section>`;
@@ -715,9 +725,17 @@ async function adminReports() {
       ? t('{n} report(s) · Sales {s} · Payments {p} · Expenses {e} · Walk-ins {w} · Quotes {q} · Orders {o}', {n: data.length, s: money(sum('total_sales')), p: money(sum('payments_received')), e: money(sum('daily_expenses')), w: sum('walk_ins'), q: sum('quotations'), o: sum('orders')})
       : '';
     $('#out').innerHTML = data.length ? data.map(r => `
+      <div class="repcard">
+      <div class="rephead">
+        <div class="info"><b>${fmtDay(r.date)} — ${esc(r.name)}${r.title ? ', ' + esc(r.title) : ''}</b>
+          <span class="meta">${esc(r.location || t('No location'))}${r.location_type === 'Project' ? '' : ' · ' + t('Sales') + ' ' + money(r.total_sales)}${r.photo_ids && r.photo_ids.length ? ' · 📷 ' + r.photo_ids.length : ''}</span></div>
+        <div class="acts">
+          <a class="btn small" href="/api/admin/reports/${r.id}.pdf">${t('Download PDF')}</a>
+          ${r.drive_file_id ? `<a class="btn secondary small" href="https://drive.google.com/file/d/${encodeURIComponent(r.drive_file_id)}/view" target="_blank" rel="noopener">${t('Open in Drive')}</a>` : ''}
+        </div>
+      </div>
       <details class="rep">
-        <summary>${fmtDay(r.date)} — ${esc(r.name)}${r.title ? ', ' + esc(r.title) : ''} · ${esc(r.location || t('No location'))}${r.location_type === 'Project' ? '' : ' · ' + t('Sales') + ' ' + money(r.total_sales)}</summary>
-        <p class="noprint" style="margin:8px 0"><a class="btn secondary small" href="/api/admin/reports/${r.id}.pdf">PDF</a></p>
+        <summary>${t('View details')}</summary>
         <dl>
           <dt>Employee</dt><dd>${esc(r.name)} (ID ${esc(r.emp_number)})${r.title ? ' — ' + esc(r.title) : ''}</dd>
           <dt>Location</dt><dd>${esc(r.location || '—')}${r.location_type ? ' (' + esc(t(r.location_type === 'Store' ? 'Show Run' : r.location_type)) + ')' : ''}</dd>
@@ -742,11 +760,9 @@ async function adminReports() {
           <dt>Signature</dt><dd>${esc(r.signature) || '—'}</dd>
           <dt>Last saved</dt><dd>${fmtDT(r.updated_at)}</dd>
         </dl>
-      </details>`).join('') : '<div class="empty">No reports in this date range.</div>';
+      </details></div>`).join('') : '<div class="empty">No reports in this date range.</div>';
   }
   $('#go').onclick = load;
-  $('#pdfAll').onclick = () => { location.href = '/api/admin/reports.pdf?from=' + $('#from').value + '&to=' + $('#to').value; };
-  $('#print').onclick = () => { document.querySelectorAll('details.rep').forEach(d => d.open = true); window.print(); };
   load();
 }
 

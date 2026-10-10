@@ -296,13 +296,6 @@ function sendPdf(res, buf, name) {
   res.send(buf);
 }
 
-app.get('/api/admin/reports.pdf', auth, notForced, adminOnly, h(async (req, res) => {
-  const reports = await reportsBetween(req.query.from, req.query.to);
-  const from = isDate(req.query.from) ? req.query.from : (reports.at(-1)?.date || '');
-  const to = isDate(req.query.to) ? req.query.to : (reports[0]?.date || '');
-  sendPdf(res, await buildReportsPdf(await withPhotos(reports), from, to), `MBG_Daily_Reports_${from}_to_${to}.pdf`);
-}));
-
 app.get('/api/admin/reports/:id.pdf', auth, notForced, adminOnly, h(async (req, res) => {
   const r = (await query(`SELECT r.id, r.report_date, r.data, r.updated_at, r.drive_file_id, e.emp_number, e.name, e.title, ${photoIdsSql}
     FROM daily_reports r JOIN employees e ON e.id = r.employee_id WHERE r.id = $1`, [Number(req.params.id) || 0])).map(reportRow)[0];
