@@ -171,6 +171,7 @@ const FA = {
   'Add employee': 'افزودن کارمند',
   'The app assigns an ID number and a temporary password. Give them to the employee in person.': 'برنامه یک شماره شناسه و یک رمز عبور موقت اختصاص می‌دهد. آن‌ها را حضوری به کارمند بدهید.',
   'Full name': 'نام کامل', 'Email': 'ایمیل', 'Job title': 'سمت شغلی', 'Create': 'ایجاد',
+  'Edit a name or job title directly in the table — it saves automatically.': 'نام یا سمت شغلی را مستقیماً در جدول ویرایش کنید — به‌طور خودکار ذخیره می‌شود.',
   'Edit a job title directly in the table — it saves automatically.': 'سمت شغلی را مستقیماً در جدول ویرایش کنید — به‌طور خودکار ذخیره می‌شود.',
   'ID': 'شناسه', 'Name': 'نام', 'Status': 'وضعیت', 'Admin': 'مدیر', 'Active': 'فعال', 'Inactive': 'غیرفعال',
   'Deactivate': 'غیرفعال کردن', 'Activate': 'فعال کردن',
@@ -658,20 +659,27 @@ async function adminEmps() {
   </section>
   <section class="card">
     <h2>Employees</h2>
-    <p class="hint">Edit a job title directly in the table — it saves automatically.</p>
+    <p class="hint">Edit a name or job title directly in the table — it saves automatically.</p>
     <datalist id="titles"></datalist>
     <div id="list" class="tablewrap"></div>
   </section>`;
   async function list() {
     const rows = await api('/admin/employees');
     $('#list').innerHTML = '<table><thead><tr><th>ID</th><th>Name</th><th>Job title</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>' +
-      rows.map(r => `<tr><td>${esc(r.emp_number)}</td><td>${esc(r.name)}${r.role==='admin'?' <span class="pill">Admin</span>':''}</td><td><input data-title="${r.id}" value="${esc(r.title)}" placeholder="Add title" list="titles" style="min-width:150px;padding:6px 8px"></td><td>${esc(r.email)}</td>
+      rows.map(r => `<tr><td>${esc(r.emp_number)}</td><td><input data-name="${r.id}" value="${esc(r.name)}" required style="min-width:150px;padding:6px 8px">${r.role==='admin'?' <span class="pill">Admin</span>':''}</td><td><input data-title="${r.id}" value="${esc(r.title)}" placeholder="Add title" list="titles" style="min-width:150px;padding:6px 8px"></td><td>${esc(r.email)}</td>
         <td>${r.active ? 'Active' : '<span class="pill off">Inactive</span>'}</td>
         <td style="white-space:nowrap">
           <button class="btn secondary small" data-reset="${r.id}">Send reset email</button>
           ${r.id !== me.id ? `<button class="btn secondary small" data-active="${r.id}" data-to="${r.active?0:1}">${r.active?'Deactivate':'Activate'}</button>` : ''}
         </td></tr>`).join('') + '</tbody></table>';
     $('#titles').innerHTML = [...new Set(['Superintendent','Project Manager','Sales Associate','Store Manager','Designer','Installer', ...rows.map(r => r.title).filter(Boolean)])].map(t => `<option value="${esc(t)}">`).join('');
+    document.querySelectorAll('[data-name]').forEach(inp => inp.onchange = async () => {
+      try {
+        await api('/admin/employees/' + inp.dataset.name + '/name', {method:'POST', body:{name: inp.value}});
+        inp.style.borderColor = 'var(--in)';
+        if (Number(inp.dataset.name) === me.id) { me.name = inp.value.trim(); header(); }
+      } catch (er) { inp.style.borderColor = 'var(--out)'; $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }
+    });
     document.querySelectorAll('[data-title]').forEach(inp => inp.onchange = async () => {
       try { await api('/admin/employees/' + inp.dataset.title + '/title', {method:'POST', body:{title: inp.value}}); inp.style.borderColor = 'var(--in)'; }
       catch (er) { $('#msg').innerHTML = '<div class="err">' + esc(t(er.message)) + '</div>'; }

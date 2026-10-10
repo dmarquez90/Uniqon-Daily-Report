@@ -296,6 +296,14 @@ app.post('/api/admin/employees/:id/reset', auth, notForced, adminOnly, h(async (
   res.json({ ok: true, email: emp.email, name: emp.name });
 }));
 
+app.post('/api/admin/employees/:id/name', auth, notForced, adminOnly, h(async (req, res) => {
+  const name = String(req.body.name || '').trim().slice(0, 120);
+  if (!name) return res.status(400).json({ error: 'Enter the name' });
+  const r = await query('UPDATE employees SET name = $1 WHERE id = $2 RETURNING id', [name, Number(req.params.id) || 0]);
+  if (!r.length) return res.status(404).json({ error: 'Not found' });
+  res.json({ ok: true });
+}));
+
 app.post('/api/admin/employees/:id/title', auth, notForced, adminOnly, h(async (req, res) => {
   const r = await query('UPDATE employees SET title = $1 WHERE id = $2 RETURNING id', [String(req.body.title || '').trim().slice(0, 100), Number(req.params.id) || 0]);
   if (!r.length) return res.status(404).json({ error: 'Not found' });
