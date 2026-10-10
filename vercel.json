@@ -4,6 +4,6 @@
   "outputDirectory": "public",
   "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
   "functions": {
-    "api/index.js": { "includeFiles": "public/logo.png", "maxDuration": 30 }
+    "api/index.js": { "includeFiles": "{public/logo.png,node_modules/pdfkit/js/**}", "maxDuration": 30 }
   }
 }
